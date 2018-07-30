@@ -1,0 +1,117 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" 
+    integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" 
+    crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" 
+    integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" 
+    crossorigin="anonymous">
+  <title>Cosmos DB Change Feed</title>
+  <style>
+  .fade-enter-active {
+    transition: all 1.5s ease;
+  }
+  .fade-enter, .fade-leave-to {
+    opacity: 0;
+  }
+  </style>
+</head>
+<body>
+  <div class="container" id="app">
+    <div class="row">
+      <div v-for="flight in flights" class="col-md-6 col-lg-4 col-xl-3" style="margin: 16px 0px;">
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title">{{ flight.from }} <i class="fas fa-plane"></i> {{ flight.to }}</h4>
+            <transition name="fade" mode="out-in">
+              <h4 class="card-subtitle mb-2" :key="flight.price">${{ flight.price }}</h4>
+            </transition>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+  <script src="https://unpkg.com/@aspnet/signalr@1.0.2/dist/browser/signalr.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script>
+    const apiBaseUrl = 'http://localhost:7071'
+    const axiosConfig = {}
+    const data = {
+      flights: []
+    }
+    const app = new Vue({
+      el: '#app',
+      data: data
+    })
+    getFlights().then(function(flights) {
+      flights.forEach(flightUpdated)
+    }).then(getConnectionInfo).then(function(info) {
+      let accessKey = info.accessKey
+      const options = {
+        accessTokenFactory: function() {
+          if (accessKey) {
+            const _accessKey = accessKey
+            accessKey = null
+            return _accessKey
+          } else {
+            return getConnectionInfo().then(function(info) {
+              return info.accessKey
+            })
+          }
+        }
+      }
+
+      const connection = new signalR.HubConnectionBuilder()
+        .withUrl(info.endpoint, options)
+        .build()
+
+      connection.on('flightUpdated', flightUpdated)
+
+      connection.onclose(function() {
+        console.log('disconnected')
+        setTimeout(function() { startConnection(connection) }, 2000)
+      })
+      startConnection(connection)
+      
+    }).catch(console.error)
+
+    function startConnection(connection) {
+      console.log('connecting...')
+      connection.start()
+        .then(function() { console.log('connected!') })
+        .catch(function(err) {
+          console.error(err)
+          setTimeout(function() { startConnection(connection) }, 2000)
+        })
+    }
+
+    function getFlights() {
+      return axios.post(`${apiBaseUrl}/api/GetFlights`, null, axiosConfig)
+        .then(function(resp) { return resp.data })
+        .catch(function() { return {} })
+    }
+
+    function getConnectionInfo() {
+      return axios.post(`${apiBaseUrl}/api/SignalRInfo`, null, axiosConfig)
+        .then(function(resp) { return resp.data })
+        .catch(function() { return {} })
+    }
+
+    function flightUpdated(updatedFlight) {
+      const flight = data.flights.find(f => f.id === updatedFlight.id)
+      if (flight) {
+        Vue.set(flight, 'from', updatedFlight.from)
+        Vue.set(flight, 'to', updatedFlight.to)
+        Vue.set(flight, 'price', updatedFlight.price)
+      } else {
+        data.flights.push(updatedFlight)
+      }
+    }
+  </script>
+</body>
+</html>

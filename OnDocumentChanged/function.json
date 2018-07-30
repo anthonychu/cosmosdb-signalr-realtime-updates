@@ -1,0 +1,19 @@
+{
+  "disabled": false,
+  "bindings": [
+    {
+      "type": "cosmosDBTrigger",
+      "name": "documents",
+      "direction": "in",
+      "databaseName": "demo",
+      "collectionName": "flights",
+      "feedPollDelay": 1000
+    },
+    {
+      "type": "signalR",
+      "name": "signalRMessages",
+      "hubName": "flights",
+      "direction": "out"
+    }
+  ]
+}
