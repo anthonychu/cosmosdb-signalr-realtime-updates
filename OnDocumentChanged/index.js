@@ -1,8 +1,8 @@
 module.exports = function (context, documents) {
-  context.bindings.signalRMessages =
-    documents.map(flight => ({
-      target: 'flightUpdated',
-      arguments: [ flight ]
-    }));
+  const flightUpdates = documents.map(flight => ({
+    target: 'flightUpdated',
+    arguments: [ flight ]
+  }));
+  context.bindings.signalRMessages = flightUpdates
   context.done();
 };  
