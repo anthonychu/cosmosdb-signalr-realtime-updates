@@ -3,7 +3,7 @@
   "bindings": [
     {
       "type": "cosmosDBTrigger",
-      "name": "documents",
+      "name": "updatedFlights",
       "direction": "in",
       "databaseName": "demo",
       "collectionName": "flights",

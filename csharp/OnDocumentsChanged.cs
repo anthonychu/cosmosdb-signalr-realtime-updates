@@ -11,7 +11,7 @@ namespace SignalRFlights
 {
     public static class OnDocumentChanged
     {
-        [FunctionName("OnDocumentChanged")]
+        [FunctionName("OnDocumentsChanged")]
         public static async Task Run(
             [CosmosDBTrigger("demo", "flights")]IEnumerable<object> updatedFlights,
             [SignalR(HubName = "flights")]IAsyncCollector<SignalRMessage> signalRMessages,
