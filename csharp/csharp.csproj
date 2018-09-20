@@ -4,9 +4,9 @@
     <AzureFunctionsVersion></AzureFunctionsVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AzureAdvocates.WebJobs.Extensions.SignalRService" Version="0.2.0-alpha" />
-    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.CosmosDB" Version="3.0.0-beta7" />
-    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.14" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.SignalRService" Version="1.0.0-preview1-10002" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.CosmosDB" Version="3.0.1" />
+    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.22" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">
