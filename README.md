@@ -8,3 +8,12 @@ A simple demo of broadcasting real-time updates from Cosmos DB over websockets. 
     - Cosmos DB trigger
     - SignalR Service bindings
 
+Put one or more documents into the demo/flights collection:
+
+```
+{
+    "from": "SEA",
+    "to": "YVR",
+    "price": 199
+}
+```
