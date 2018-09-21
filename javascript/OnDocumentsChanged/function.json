@@ -7,6 +7,7 @@
       "direction": "in",
       "databaseName": "demo",
       "collectionName": "flights",
+      "ConnectionStringSetting": "AzureWebJobsCosmosDBConnectionString",
       "feedPollDelay": 1000
     },
     {

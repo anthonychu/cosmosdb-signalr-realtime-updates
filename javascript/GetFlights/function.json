@@ -15,6 +15,7 @@
     {
       "type": "cosmosDB",
       "name": "flights",
+      "ConnectionStringSetting": "AzureWebJobsCosmosDBConnectionString",
       "databaseName": "demo",
       "collectionName": "flights",
       "direction": "in"
