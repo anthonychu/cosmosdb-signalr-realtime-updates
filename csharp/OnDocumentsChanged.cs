@@ -13,8 +13,9 @@ namespace SignalRFlights
     {
         [FunctionName("OnDocumentsChanged")]
         public static async Task Run(
-            [CosmosDBTrigger("demo", "flights")]IEnumerable<object> updatedFlights,
-            [SignalR(HubName = "flights")]IAsyncCollector<SignalRMessage> signalRMessages,
+            [CosmosDBTrigger("demo", "flights", ConnectionStringSetting = "AzureWebJobsCosmosDBConnectionString")]
+                IEnumerable<object> updatedFlights,
+            [SignalR(HubName = "flights")] IAsyncCollector<SignalRMessage> signalRMessages,
             ILogger log)
         {
             foreach(var flight in updatedFlights)

@@ -15,8 +15,8 @@ namespace SignalRFlights
     {
         [FunctionName("SignalRInfo")]
         public static IActionResult Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous)]HttpRequest req,
-            [SignalRConnectionInfo(HubName = "flights")]AzureSignalRConnectionInfo connectionInfo,
+            [HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req,
+            [SignalRConnectionInfo(HubName = "flights")] SignalRConnectionInfo connectionInfo,
             ILogger log)
         {
             return new OkObjectResult(connectionInfo);

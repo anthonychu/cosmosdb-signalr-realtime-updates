@@ -15,8 +15,9 @@ namespace SignalRFlights
     {
         [FunctionName("GetFlights")]
         public static IActionResult Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous)]HttpRequest req,
-            [CosmosDB("demo", "flights")] IEnumerable<object> flights,
+            [HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req,
+            [CosmosDB("demo", "flights", ConnectionStringSetting = "AzureWebJobsCosmosDBConnectionString")]
+                IEnumerable<object> flights,
             ILogger log)
         {
             return new OkObjectResult(flights);

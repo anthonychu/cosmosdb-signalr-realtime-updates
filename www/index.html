@@ -51,23 +51,23 @@
     getFlights().then(function(flights) {
       flights.forEach(flightUpdated)
     }).then(getConnectionInfo).then(function(info) {
-      let accessKey = info.accessKey
+      let accessToken = info.accessToken
       const options = {
         accessTokenFactory: function() {
-          if (accessKey) {
-            const _accessKey = accessKey
-            accessKey = null
-            return _accessKey
+          if (accessToken) {
+            const _accessToken = accessToken
+            accessToken = null
+            return _accessToken
           } else {
             return getConnectionInfo().then(function(info) {
-              return info.accessKey
+              return info.accessToken
             })
           }
         }
       }
 
       const connection = new signalR.HubConnectionBuilder()
-        .withUrl(info.endpoint, options)
+        .withUrl(info.url, options)
         .build()
 
       connection.on('flightUpdated', flightUpdated)
