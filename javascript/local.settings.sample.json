@@ -9,6 +9,7 @@
   },
   "Host": {
       "LocalHttpPort": 7071,
-      "CORS": "*"
+      "CORS": "http://localhost:8080",
+      "CORSCredentials": true
   }
 }
