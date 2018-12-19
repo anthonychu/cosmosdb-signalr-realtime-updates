@@ -1,29 +1,52 @@
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" 
-    integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" 
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ"
     crossorigin="anonymous">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" 
-    integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" 
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
     crossorigin="anonymous">
   <title>Cosmos DB Change Feed</title>
   <style>
-  .fade-enter-active {
+    .fade-enter-active {
     transition: all 1.5s ease;
   }
   .fade-enter, .fade-leave-to {
     opacity: 0;
   }
+
+  .modal-mask {
+    position: fixed;
+    z-index: 9998;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, .5);
+    display: table;
+    transition: opacity .3s ease;
+  }
+
+  .modal-wrapper {
+    display: table-cell;
+    vertical-align: middle;
+  }
   </style>
 </head>
+
 <body>
   <div class="container" id="app">
     <div class="row">
+      <div>
+        <h1>Real-time flight prices</h1>
+        <a href="#" @click.prevent="beginEditFlight({})">New flight</a>
+      </div>
+    </div>
+    <div class="row">
       <div v-for="flight in flights" class="col-md-6 col-lg-4 col-xl-3" style="margin: 16px 0px;">
-        <div class="card">
+        <div class="card" v-on:click="beginEditFlight(flight)">
           <div class="card-body">
             <h4 class="card-title">{{ flight.from }} <i class="fas fa-plane"></i> {{ flight.to }}</h4>
             <transition name="fade" mode="out-in">
@@ -33,44 +56,105 @@
         </div>
       </div>
     </div>
+
+    <div v-if="isModalVisible">
+      <transition name="modal">
+        <div class="modal-mask">
+          <div class="modal-wrapper">
+
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Edit flight</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true" @click="isModalVisible=false">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <form>
+                    <div class="form-group">
+                      <label for="editFrom">From airport</label>
+                      <input type="text" class="form-control" id="editFrom" v-model="selectedFlight.from">
+                    </div>
+                    <div class="form-group">
+                      <label for="editTo">To airport</label>
+                      <input type="text" class="form-control" id="editTo" v-model="selectedFlight.to">
+                    </div>
+                    <div class="form-group">
+                      <label for="editPrice">Price</label>
+                      <input type="text" class="form-control" id="editPrice" v-model="selectedFlight.price">
+                    </div>
+                  </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" @click="isModalVisible=false">Close</button>
+                  <button type="button" class="btn btn-primary" @click="updateFlight">Save changes</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </transition>
+    </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
-  <script src="https://unpkg.com/@aspnet/signalr@1.0.2/dist/browser/signalr.js"></script>
-  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@aspnet/signalr@1.1.0/dist/browser/signalr.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios@0.18.0/dist/axios.min.js"></script>
   <script>
     const apiBaseUrl = 'http://localhost:7071'
-    const axiosConfig = {}
     const data = {
-      flights: []
+      flights: [],
+      selectedFlight: {
+        id: null,
+        from: null,
+        to: null,
+        price: null
+      },
+      isModalVisible: false
     }
     const app = new Vue({
       el: '#app',
-      data: data
+      data: data,
+      methods: {
+        beginEditFlight: function (flight) {
+          this.selectedFlight.id = flight.id
+          this.selectedFlight.from = flight.from
+          this.selectedFlight.to = flight.to
+          this.selectedFlight.price = flight.price
+          this.isModalVisible = true
+        },
+        updateFlight: function () {
+          this.isModalVisible = false
+          return axios.post(`${apiBaseUrl}/api/UpdateFlight`, this.selectedFlight)
+        }
+      }
     })
-    getFlights().then(function(flights) {
+    getFlights().then(function (flights) {
       flights.forEach(flightUpdated)
-    }).then(function() {
+    }).then(function () {
       const connection = new signalR.HubConnectionBuilder()
         .withUrl(`${apiBaseUrl}/api`)
         .build()
 
       connection.on('flightUpdated', flightUpdated)
 
-      connection.onclose(function() {
+      connection.onclose(function () {
         console.log('disconnected')
-        setTimeout(function() { startConnection(connection) }, 2000)
+        setTimeout(function () { startConnection(connection) }, 2000)
       })
-      
+
       connection.start()
-        .then(function() { console.log('connected!') })
+        .then(function () { console.log('connected!') })
 
     }).catch(console.error)
 
     function getFlights() {
-      return axios.post(`${apiBaseUrl}/api/GetFlights`, null, axiosConfig)
-        .then(function(resp) { return resp.data })
-        .catch(function() { return {} })
+      return axios.post(`${apiBaseUrl}/api/GetFlights`)
+        .then(function (resp) { return resp.data })
+        .catch(function () { return {} })
     }
 
     function flightUpdated(updatedFlight) {
@@ -85,4 +169,5 @@
     }
   </script>
 </body>
+
 </html>
