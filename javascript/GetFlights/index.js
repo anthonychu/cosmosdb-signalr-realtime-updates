@@ -1,4 +1,3 @@
-module.exports = function (context, req, flights) {
+module.exports = async function (context, req, flights) {
   context.res.body = flights;
-  context.done();
 };

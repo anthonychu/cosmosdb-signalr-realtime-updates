@@ -1,4 +1,3 @@
-module.exports = function (context, req, connectionInfo) {
+module.exports = async function (context, req, connectionInfo) {
     context.res = { body: connectionInfo };
-    context.done();
 };
