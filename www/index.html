@@ -33,15 +33,28 @@
     display: table-cell;
     vertical-align: middle;
   }
+
+  .can-edit .card {
+    cursor: pointer;
+  }
   </style>
 </head>
 
 <body>
-  <div class="container" id="app">
+  <div class="container" id="app" :class="{ 'can-edit': canEdit }">
     <div class="row">
       <div>
         <h1>Real-time flight prices</h1>
-        <a href="#" @click.prevent="beginEditFlight({})">New flight</a>
+        <div v-if="isAuthEnabled">
+          <div v-if="canEdit">
+            Welcome {{ username }} | 
+            <a href="#" @click.prevent="beginEditFlight({})">New flight</a> |
+            <a :href="logoutUrl">Logout</a>
+          </div>
+          <div v-else>
+            <a :href="loginUrl">Login to edit</a>
+          </div>
+        </div>
       </div>
     </div>
     <div class="row">
@@ -70,26 +83,26 @@
                     <span aria-hidden="true" @click="isModalVisible=false">&times;</span>
                   </button>
                 </div>
-                <div class="modal-body">
-                  <form>
+                <form @submit.prevent="updateFlight">
+                  <div class="modal-body">
                     <div class="form-group">
                       <label for="editFrom">From airport</label>
-                      <input type="text" class="form-control" id="editFrom" v-model="selectedFlight.from">
+                      <input type="text" class="form-control" required pattern="[A-Z]{3,4}" title="Airport code (3-4 upper case letters)" id="editFrom" v-model="selectedFlight.from">
                     </div>
                     <div class="form-group">
                       <label for="editTo">To airport</label>
-                      <input type="text" class="form-control" id="editTo" v-model="selectedFlight.to">
+                      <input type="text" class="form-control" required pattern="[A-Z]{3,4}" title="Airport code (3-4 upper case letters)" id="editTo" v-model="selectedFlight.to">
                     </div>
                     <div class="form-group">
                       <label for="editPrice">Price</label>
-                      <input type="text" class="form-control" id="editPrice" v-model="selectedFlight.price">
+                      <input type="text" class="form-control" required pattern="[1-9]\d{0,4}" title="1 - 99999" id="editPrice" v-model="selectedFlight.price">
                     </div>
-                  </form>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" @click="isModalVisible=false">Close</button>
-                  <button type="button" class="btn btn-primary" @click="updateFlight">Save changes</button>
-                </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="isModalVisible=false">Close</button>
+                    <input type="submit" class="btn btn-primary" value="Save">
+                  </div>
+                </form>
               </div>
             </div>
 
@@ -104,7 +117,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@aspnet/signalr@1.1.0/dist/browser/signalr.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios@0.18.0/dist/axios.min.js"></script>
   <script>
-    const apiBaseUrl = 'http://localhost:7071'
+    const apiBaseUrl = 'https://test-cosmosdb-updates.azurewebsites.net'
+    const authProvider = 'twitter'
+    //const apiBaseUrl = 'http://localhost:7071'
     const data = {
       flights: [],
       selectedFlight: {
@@ -113,13 +128,24 @@
         to: null,
         price: null
       },
-      isModalVisible: false
+      isModalVisible: false,
+      isAuthEnabled: false,
+      loginUrl: `${apiBaseUrl}/.auth/login/${authProvider}?post_login_redirect_url=${encodeURIComponent(window.location.href)}`,
+      logoutUrl: `${apiBaseUrl}/.auth/logout?post_logout_redirect_uri=${encodeURIComponent(window.location.href)}`,
+      username: null
     }
     const app = new Vue({
       el: '#app',
       data: data,
+      computed: {
+        canEdit: function() {
+          return !!this.username
+        }
+      },
       methods: {
         beginEditFlight: function (flight) {
+          if (!this.canEdit) return;
+
           this.selectedFlight.id = flight.id
           this.selectedFlight.from = flight.from
           this.selectedFlight.to = flight.to
@@ -127,11 +153,15 @@
           this.isModalVisible = true
         },
         updateFlight: function () {
+          const config = { withCredentials: true }
           this.isModalVisible = false
-          return axios.post(`${apiBaseUrl}/api/UpdateFlight`, this.selectedFlight)
+          return axios.post(`${apiBaseUrl}/api/UpdateFlight`, this.selectedFlight, config)
         }
       }
     })
+
+    getUserInfo()
+
     getFlights().then(function (flights) {
       flights.forEach(flightUpdated)
     }).then(function () {
@@ -166,6 +196,20 @@
       } else {
         data.flights.push(updatedFlight)
       }
+    }
+
+    function getUserInfo() {
+      const config = { withCredentials: true }
+      return axios.get(`${apiBaseUrl}/.auth/me`, config).then(function(resp) {
+        data.isAuthEnabled = true
+        const identity = resp.data[0]
+        data.username = identity.user_id
+        console.log(resp)
+      }).catch(function(err) {
+        // 401 - auth enabled but not authenticated
+        // 404 - auth disabled
+        data.isAuthEnabled = err.response.status === 401
+      });
     }
   </script>
 </body>
