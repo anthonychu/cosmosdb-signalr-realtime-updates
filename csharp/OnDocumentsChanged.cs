@@ -13,7 +13,7 @@ namespace SignalRFlights
     {
         [FunctionName("OnDocumentsChanged")]
         public static async Task Run(
-            [CosmosDBTrigger("demo", "flights", ConnectionStringSetting = "AzureWebJobsCosmosDBConnectionString")]
+            [CosmosDBTrigger("demo", "flights", ConnectionStringSetting = "AzureWebJobsCosmosDBConnectionString", CreateLeaseCollectionIfNotExists=true)]
                 IEnumerable<object> updatedFlights,
             [SignalR(HubName = "flights")] IAsyncCollector<SignalRMessage> signalRMessages,
             ILogger log)
